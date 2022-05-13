@@ -12,9 +12,9 @@ from TSFMAE import *
 class ContrastiveMAE(nn.Module):
     def __init__(self,
                  d_input = 2,
-                 d_spatial = 8,
-                 nhead = 4,
-                 dim_feedforward = 2048,
+                 d_spatial = 4,
+                 nhead = 2,
+                 dim_feedforward = 512,
                  ped_size=81,
                  dropout = 0.2,
                  batch_first = True,

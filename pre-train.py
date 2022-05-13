@@ -5,6 +5,7 @@ pre-train will mainly perform the pretraining process.
 This process will do the MAE work and will try to recover the masked trajectory
 '''
 
+from email.policy import strict
 from pickletools import optimize
 from libmain import *
 from TSFMAE import *
@@ -34,6 +35,12 @@ def train(model:ContrastiveMAE,
     )
     train_loader = DataLoader(train_set,batch_size=batch_size)
     scheduler = LambdaLR(optimizer, lr_lambda=lambda epoch: 0.96**epoch)
+    
+    if os.path.exists('PretrainedMAE.pth'):
+        PretrainedMAE = MaskedAutoEncoder()
+        PretrainedMAE.load_state_dict(torch.load('PretrainedMAE.pth'),strict=False)
+        model.MAE = PretrainedMAE
+    
     for epoch in range(epochs):
         print('='*20, 'Epoch', epoch,'='*20)
         epoch_loss = []
@@ -44,7 +51,7 @@ def train(model:ContrastiveMAE,
                                             data[:,:,:,-2:].to(torch.float32).to(device),
                                             mask_prop)
                 batch_loss = ADE(result.to(device), data[:,:,0,-2:].to(device)).to(device) +\
-                             0.00000001 * NCE(represent, rep_sample)
+                             0.0000001 * NCE(represent, rep_sample)
                 batch_loss.backward()
                 optimizer.step()
                 epoch_loss.append(batch_loss.detach().numpy())
@@ -74,7 +81,7 @@ def preTrainArgParser():
     parser.add_argument('--ped_size', type=int, default=81)
     parser.add_argument('--dropout', type=float, default=0.1)
     parser.add_argument('--batch_first', type=bool, default=True)
-    parser.add_argument('--device', type=str, default='cpu')
+    parser.add_argument('--device', type=str, default='cuda:0')
     
     # Training argument.
     parser.add_argument('--learning_rate', type=float, default=0.00001)
